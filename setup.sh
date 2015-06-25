@@ -6,6 +6,7 @@ if [ $? != 0 ]; then
   exit -1
 fi
 
+conda update conda
 conda create --name ipython --file requirements.txt
 
 echo "Done! You can start using by running,"
