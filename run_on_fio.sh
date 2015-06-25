@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ $# != 1 ]; then
-  echo "Usage: $0 <trace file>"
+if [ $# -lt 1 ]; then
+  echo "Usage: $0 <trace file> [<parameter_for_fio> ...]"
   exit -1
 fi
 
@@ -11,14 +11,14 @@ if [[ $? != 0 || ! -f $file ]]; then
   exit -2
 fi
 
-sudo hdparm -W0 /dev/sdb
+sudo hdparm -W0 /dev/sdb 2>&1 >/dev/null
 
 filename=`basename $file`
 fio_iolog="/tmp/${filename}.$$.iolog"
 fio_script="/tmp/${filename}.$$.fio"
 device="/dev/sdb1"
 
-is_fio_iolog=$(head -n 1 $filename | grep "fio version 2 iolog")
+is_fio_iolog=$(head -n 1 $file | grep "fio version 2 iolog")
 if [ $? != 0 ]; then
   awk -v device=$device '
   BEGIN {
@@ -36,10 +36,8 @@ if [ $? != 0 ]; then
     print device, "close"
   }' $file > $fio_iolog
 else
-  fio_iolog=$filename
+  fio_iolog=$file
 fi
-
-echo "fio trace: $fio_iolog"
 
 cat > $fio_script <<EOF
 [global]
@@ -54,6 +52,13 @@ replay_no_stall=1
 end_fsync=1
 EOF
 
-echo "+ sudo fio $fio_script"
-sudo fio $fio_script
+if [ $# -gt 1 ]; then
+  array=( $@ )
+  len=${#array[@]}
+  _args=${array[@]:1:$len}
+
+  sudo fio $fio_script "$_args"
+else
+  sudo fio $fio_script
+fi
 
