@@ -16,7 +16,7 @@ sudo hdparm -W0 /dev/sdb 2>&1 >/dev/null
 filename=`basename $file`
 fio_iolog="/tmp/${filename}.$$.iolog"
 fio_script="/tmp/${filename}.$$.fio"
-device="/dev/sdb1"
+device="/dev/sdb"
 
 is_fio_iolog=$(head -n 1 $file | grep "fio version 2 iolog")
 if [ $? != 0 ]; then
